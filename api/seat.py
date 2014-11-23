@@ -32,7 +32,8 @@ quotaname={'GN':'GENERAL QUOTA',
            'RC':'Reservation Against Cancellation',
            'RS':'Road Side',
            'YU':'Yuva',
-           'LB':'Lower Berth'}
+           'LB':'Lower Berth',
+           'PT':'Premium Tatkal Quota'}
 
 #Strips space between words and return the string
 def strip_inline_space(s):

@@ -33,10 +33,10 @@ def get_pnr(pnr):
     strings=re.findall(r"(?<=_both\">)[0-9A-Z ]+[A-Z]+",html)
     strings=[s.strip() for s in strings]
     #status=re.findall(r"(?<=B>)[A-Z0-9]+ +, [0-9]+,[A-Z]+",html)
-    status=re.findall(r"(?<=B>)[A-Z0-9/]+[ ,]+[0-9]+,[A-Z]+",html)
+    status=re.findall(r"(?<=B>)[A-Z0-9/]+[ ,]+[0-9]+,[A-Z]+|(?<=B>) +CNF +,[A-Z]+",html)
     booking_status=[strip_inline_space(s) for s in status]
     psgr=re.findall(r"(?<=B>Passenger )[0-9]+",html)
-    current_status=re.findall(r"(?<=B>) +[A-Z]+ +|(?<=B>)Can/Mod|(?<=B>)W/L  [0-9]+(?=</B>)",html)
+    current_status=re.findall(r"(?<=B>) +[A-Z]+ +|(?<=B>)Can/Mod|(?<=B>)[0-9A-Z/, ]+ [0-9]+(?=</B>)|(?<=B>)RAC +[0-9]+|(?<=B>)Confirmed(?=</B>)",html)
     current_status=[s.strip() for s in current_status]
     try:
         d['pnr']=pnr
@@ -115,5 +115,5 @@ def check_pnr(pnr):
     return r
 
 if __name__=="__main__":
-    r=check_pnr('472018925')
+    r=check_pnr('2527732743')
     print(r)
