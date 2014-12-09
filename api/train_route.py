@@ -1,4 +1,4 @@
-#Get information about all station in the train's route
+#Get information about all stations in the train's route
 import json
 import db
 
@@ -32,6 +32,8 @@ def format_result_json(m,s):
         stn_md=station_metadata(val['station'])
         t={}
         t['no']=i+1
+        t['scharr']=val['arrival']
+        t['schdep']=val['departure']
         t['lat']=stn_md['lat']
         t['lng']=stn_md['lng']
         t['state']=stn_md['state']

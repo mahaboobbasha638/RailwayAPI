@@ -93,6 +93,6 @@ def trains_between(source,dest):
     return format_result(r)
 
 if  __name__=="__main__":
-    j=trains_between("lko","anvt")
+    j=trains_between("gkp","dli")
     print(j)
         

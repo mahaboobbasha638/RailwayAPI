@@ -89,8 +89,9 @@ def format_result_json(p):
     d['boarding_point']['name']=stn_md['fullname']
     d['class']=p['class']
     d['error']=p['error']
+    d['char_prepared']=p['chart']
     d['chart_prepared']=p['chart']
-    d['total_passengers']=p['total']
+    d['no_of_passengers']=p['total']
     d['passengers']=[]
     
     curr_status=p['current_status']
@@ -98,7 +99,8 @@ def format_result_json(p):
     for i in range(p['total']):
         t={}
         t['no']=i+1
-        t['booking_status']=book_status[i]
+        t['coach']=t['berth']=t['quota']=''
+        t['coach']=book_status[i]
         t['current_status']=curr_status[i]
         d['passengers'].append(t)
 
@@ -111,5 +113,5 @@ def check_pnr(pnr):
     return r
 
 if __name__=="__main__":
-    r=check_pnr('8228653135')
+    r=check_pnr('6436104648')
     print(r)

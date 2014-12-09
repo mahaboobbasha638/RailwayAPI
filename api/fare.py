@@ -1,8 +1,8 @@
 import json
 import re
-import json
 import db
 from fetchpage import fetchpage
+
 
 classname={'CC':'AC CHAIR CAR',
            '1A':'FIRST AC',
@@ -36,12 +36,14 @@ quotaname={'GN':'GENERAL QUOTA',
 def get_fare(k):
     url="http://www.indianrail.gov.in/cgi_bin/inet_frenq_cgi.cgi"
     doj=k['doj'].split('-')
+    k['quota']=k['quota'].upper()
     values={"lccp_trnno":k['train'],
             "lccp_day":doj[0],
             "lccp_month":doj[1],
             "lccp_srccode":k['source'],
             "lccp_dstncode":k['dest'],
-            "lccp_classopt":k['pref'],
+            #"lccp_classopt":k['pref'],
+            "lccp_classopt":"ZZ",
             "lccp_age":k['age'],
             "lccp_frclass1":k['quota'],
             "lccp_conc":"ZZZZZZ",
@@ -64,44 +66,50 @@ def get_fare(k):
             }
     
     html=fetchpage(url,values,header)
-    #cls=re.findall("(?<=Class>) +-* *1A|2A|3A|SL",html)
+    cls=re.findall("(?<=Class -- )[0-9A-Za-z]+",html)
     fares=re.findall("(?<=both\">)[0-9]+",html)
-    k['fare']=fares[-1]
-    return k
+    f=[]
+    l=len(cls)
+    for i in range(l):
+        t={}
+        t['class']=cls[i]
+        t['fare']=fares[-l+i]
+        f.append(t)
+    return f
 
-def format_result_json(r):
+def format_result_json(r,k):
     d={}
+    d['response_code']=200
     d['from']={}
-    sd=db.station_metadata(r['source'])
+    sd=db.station_metadata(k['source'])
     d['from']['name']=sd['fullname']
     d['from']['code']=sd['code']
-    d['from']['lat']=sd['lat']
-    d['from']['lng']=sd['lng']
     d['to']={}
-    sd=db.station_metadata(r['dest'])
+    sd=db.station_metadata(k['dest'])
     d['to']['name']=sd['fullname']
     d['to']['code']=sd['code']
-    d['to']['lat']=sd['lat']
-    d['to']['lng']=sd['lng']
-    d['class']={}
-    d['class']['code']=r['pref']
-    d['class']['name']=classname[r['pref']]
+    d['fare']=[]
+    for i in r:
+        t={}
+        t['code']=i['class']
+        t['name']=classname.get(i['class'])
+        t['fare']=i['fare']
+        d['fare'].append(t)
     d['quota']={}
-    d['quota']['code']=r['quota']
-    d['quota']['name']=quotaname[r['quota']]
-    td=db.train_metadata(r['train'])
+    d['quota']['code']=k['quota']
+    d['quota']['name']=quotaname.get(k['quota'])
+    td=db.train_metadata(k['train'])
     d['train']={}
     d['train']['name']=td['name']
-    d['train']['number']=r['train'] #ensures result in case if DB has no record of such a train
-    d['fare']=r['fare']
+    d['train']['number']=k['train'] #ensures result in case if DB has no record of such a train
     d=json.dumps(d,indent=4)
     return d
 
 def fare(**k):
     r=get_fare(k)
-    r=format_result_json(r)
+    r=format_result_json(r,k)
     return r
 
 if __name__=="__main__":
-    result=fare(train="12555",age="18",pref="3A",quota="PT",doj="19-11-2014",source="gkp",dest="ndls")
+    result=fare(train="12555",age="18",quota="pt",doj="23-11-2015",source="gkp",dest="ndls")
     print(result)
