@@ -33,11 +33,17 @@ def get_pnr(pnr):
     strings=[s.strip() for s in strings]
     psgr=re.findall(r"(?<=B>Passenger )[0-9]+",html)
     status=re.findall(r"(?<=B>)(?!Passenger)[0-9A-Za-z/, ]+(?=</B>)",html)
+    cancelled=0
+    if status!=[] and status[-1]=='TRAIN CANCELLED':
+        cancelled=1
     status=[s.strip() for s in status]
     booking_status=[]
     current_status=[]
     for i in range(0,len(status),2):
         booking_status.append(status[i])
+        if cancelled:
+            current_status.append('TRAIN CANCELLED')
+            continue
         current_status.append(status[i+1])
     try:
         d['pnr']=pnr
@@ -111,5 +117,5 @@ def check_pnr(pnr):
     return r
 
 if __name__=="__main__":
-    r=check_pnr('8228653135')
+    r=check_pnr('2529258886')
     print(r)

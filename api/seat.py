@@ -68,10 +68,11 @@ def get_seat(train,pref,quota,doj,source,dest):
             "Referer":"http://www.indianrail.gov.in/seat_Avail.html"
             }
     html=fetchpage(url,values,header)
-  
-    seat=re.findall(r"(?<=both\">)(?:RLWL|RLGN|RQWL|PQWL|LDWL|GNWL|CKWL|WL|RAC|AVAILABLE)[/0-9A-Z ]+",html)
+    seat=re.findall(r"(?<=both\">)[REGRET/]*(?:RLWL|RLGN|RQWL|PQWL|LDWL|GNWL|CKWL|WL|RAC|AVAILABLE)[/0-9A-Z ]+|NOT AVAILABLE|TRAIN +DEPARTED",html)
     seat=[i.strip() for i in seat]
-    dates=re.findall(r"(?<=both\">)[0-9]+ *[0-9 -]+",html)
+    dates=re.findall(r"(?<=both\">) *[0-9]+ *[0-9 -]+",html)
+    if dates==[]:
+        dates=re.findall(r"(?<=width=\"16%\">)[0-9]+ *[0-9 -]+",html)
     d={}
     d['num']=train;d['quota']=quota;d['class']=pref
     d['source']=source;d['dest']=dest
@@ -129,5 +130,5 @@ def seat_avl(train,pref,quota,doj,source,dest):
     return r
 
 if __name__=="__main__":
-    result=seat_avl("12001","CC","GN","14-10-2014","bPl","ndls") #Modify date
+    result=seat_avl("17037","3A","GN","24-02-2015","SC","PNU") #Modify date
     print(result)

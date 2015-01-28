@@ -36,6 +36,8 @@ quotaname={'GN':'GENERAL QUOTA',
 def get_fare(k):
     url="http://www.indianrail.gov.in/cgi_bin/inet_frenq_cgi.cgi"
     doj=k['doj'].split('-')
+    if len(doj)<=1:
+        doj=['31','12','2015'] #Default Date
     k['quota']=k['quota'].upper()
     values={"lccp_trnno":k['train'],
             "lccp_day":doj[0],
@@ -111,5 +113,5 @@ def fare(**k):
     return r
 
 if __name__=="__main__":
-    result=fare(train="12555",age="18",quota="pt",doj="23-11-2015",source="gkp",dest="ndls")
+    result=fare(train="12002",age="18",quota="pt",doj="12",source="ndls",dest="bpl")
     print(result)
