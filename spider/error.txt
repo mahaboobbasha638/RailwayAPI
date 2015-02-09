@@ -75,3 +75,8 @@ IncompleteRead(9654 bytes read, 5162 more expected)
 [WinError 10054] An existing connection was forcibly closed by the remote host
 ''
 ''
+IncompleteRead(4069 bytes read)
+''
+''
+''
+''
