@@ -35,6 +35,7 @@ quotaname={'GN':'GENERAL QUOTA',
            'LB':'Lower Berth',
            'PT':'Premium Tatkal Quota'}
 
+
 #Strips space between words and return the string
 def strip_inline_space(s):
     new=''
@@ -44,9 +45,19 @@ def strip_inline_space(s):
         new=new+i
     return new
 
+def nullify(d):
+    d['seats']='';d['dates']='';d['error']=True
+    
 def get_seat(train,pref,quota,doj,source,dest):
     url="http://www.indianrail.gov.in/cgi_bin/inet_accavl_cgi.cgi"
+    d={}
+    d['num']=train;d['quota']=quota;d['class']=pref
+    d['source']=source;d['dest']=dest
     doj=doj.split('-')
+    if len(doj)!=3:
+        nullify(d)
+        return d
+
     values={"lccp_trnno":train,
             "lccp_day":doj[0],
             "lccp_month":doj[1],
@@ -67,22 +78,27 @@ def get_seat(train,pref,quota,doj,source,dest):
             "User-Agent":"Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)",
             "Referer":"http://www.indianrail.gov.in/seat_Avail.html"
             }
+
     html=fetchpage(url,values,header)
-    seat=re.findall(r"(?<=both\">)[REGRET/]*(?:RLWL|RLGN|RQWL|PQWL|LDWL|GNWL|CKWL|WL|RAC|AVAILABLE)[/0-9A-Z ]+|NOT AVAILABLE|TRAIN +DEPARTED",html)
+    seat=re.findall(r"(?<=both\">)[REGRET/]*(?:RLWL|RLGN|RQWL|PQWL|LDWL|GNWL|CKWL|WL|RAC|AVAILABLE)[/0-9A-Z ]+|NOT AVAILABLE|TRAIN +DEPARTED|Charting Done",html)
     seat=[i.strip() for i in seat]
     dates=re.findall(r"(?<=both\">) *[0-9]+ *[0-9 -]+",html)
     if dates==[]:
         dates=re.findall(r"(?<=width=\"16%\">)[0-9]+ *[0-9 -]+",html)
-    d={}
-    d['num']=train;d['quota']=quota;d['class']=pref
-    d['source']=source;d['dest']=dest
+
     if seat==[]:
-        d['seats']='';d['dates']='';d['error']=True
+        nullify(d)
         return d
     d['seats']=[]
     d['dates']=[]
     d['error']=False
-    for i in range(0,len(seat),2):
+    #Sometimes the result contains seats for  two classes and sometimes only for one, so quotient adds to the seats to get the seat for required class
+    step=int(len(seat)/len(dates))
+    if step==0:
+        nullify(d)
+        return d
+
+    for i in range(0,len(seat),step):
         d['seats'].append(seat[i])
     for i in dates:
         i=strip_inline_space(i)
@@ -130,5 +146,5 @@ def seat_avl(train,pref,quota,doj,source,dest):
     return r
 
 if __name__=="__main__":
-    result=seat_avl("17037","3A","GN","24-02-2015","SC","PNU") #Modify date
+    result=seat_avl("12296","2A","CK","08-07-2015","pnbe","sbc") #Modify date
     print(result)

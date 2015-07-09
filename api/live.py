@@ -21,7 +21,7 @@ def tominhr(s):
     return [hr,m]
 
 def calc_delay(t1,t2):
-    if isETA(t2): #If train is yet to arrive then skip
+    if isETA(t2) or t2=='Waiting for Update': #If train is yet to arrive then skip
         return [0,0,'Not arrived']
     if t1=='Source':#If it is source station then no delay
         return [0,0,'Source']
@@ -75,7 +75,7 @@ def runningtime(url):
     global pos
     html=fetchpage(url)
     stn=re.findall("(?<=td>)(?!Source|Destination)[A-Za-z() ]+",html)
-    times=re.findall("(?<=span=\"2\">)Source|(?<=td>)[0-9]+:[0-9]+ [PAM]+ / Destination|(?<=td>)Source / [0-9]+:[0-9]+ [PAM]+|(?<=td>)[0-9]+:[0-9]+ [PAM]+ / [0-9]+:[0-9]+ [PAM]+|(?<=td>)[0-9]+:[0-9]+ [PAM]+|(?<=td>)Source|(?<=td>)Destination|(?<=span=\"2\">)E.T.A.:[0-9PAM :]+",html)
+    times=re.findall("(?<=span=\"2\">)Source|(?<=td>)[0-9]+:[0-9]+ [PAM]+ / Destination|(?<=td>)Source / [0-9]+:[0-9]+ [PAM]+|(?<=td>)[0-9]+:[0-9]+ [PAM]+ / [0-9]+:[0-9]+ [PAM]+|(?<=td>)[0-9]+:[0-9]+ [PAM]+|(?<=td>)Source|(?<=td>)Destination|(?<=span=\"2\">)E.T.A.:[0-9PAM :]+|Waiting for Update",html)
     status=re.findall("(?<=green\">)No Delay|(?<=red\">)[0-9]+ [A-Za-z0-9 ]+|(?<=blue\">)[A-Za-z 0-9.]+",html)
     pos=re.search('(?<=br>Currently)[A-Za-z()0-9 ,<>\"\'=/:.]+(?=</p>)',html)
     if pos!=None:
@@ -95,7 +95,6 @@ def runningtime(url):
         except IndexError:
             d['act_arrival']=tm
             d['act_departure']='-'
-
         lst.append(d)
         i+=3
     return lst
@@ -138,6 +137,6 @@ def callable_status(number,doj):
     return s
 
 if __name__=="__main__":
-    print (get_status('12391','20141205'))
+    print (get_status('58418','20150518'))
     
     

@@ -1,6 +1,6 @@
-import sqlite3
 import db
 import json
+from collections import Counter
 
 def numsuggest(num):
     with db.opendb(db.TRAINDB) as train:
@@ -10,7 +10,9 @@ def numsuggest(num):
         l=[]
         for i in t:
             if i.startswith(num):
-                l.append(i)
+                train._exec("SELECT name FROM train WHERE number=(?)",(i,))
+                name=train._fetchone()
+                l.append(i+' ('+name['name']+')')
         return l
 
 def namesuggest(name):
@@ -20,9 +22,20 @@ def namesuggest(name):
         t=train._fetchall()
         t=(loco['name'] for loco in t)
         l=[]
+        cnt=Counter()
+        d={}
         for i in t:
             if i.startswith(name):
-                l.append(i)
+                cnt[i]+=1
+                train._exec("SELECT number FROM train WHERE name=(?)",(i,))
+                if cnt[i]==1:
+                    nums=train._fetchall()
+                    d[i]=nums
+                num=d[i][0]
+                if cnt[i]>1:
+                    num=d[i][cnt[i]-1]
+                    
+                l.append(i+' ('+num['number']+')')
         return l
 
 def format_result_json(r):
@@ -44,5 +57,5 @@ def suggest(n):
 
     
 if __name__=="__main__":
-    d=suggest('gor')
+    d=suggest('shiv')
     print(d)

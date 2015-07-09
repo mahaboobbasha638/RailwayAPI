@@ -16,6 +16,5 @@ def fetchpage(url,values=None,header={"Referer":"http://www.indianrail.gov.in/"}
     except Exception as e:
         with open("error.txt","a") as f:
             f.write(str(e)+'\n')
-        time.sleep(2)
-        return fetchpage(url,values,header)
+        return ''
     

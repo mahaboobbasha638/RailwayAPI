@@ -117,5 +117,5 @@ def check_pnr(pnr):
     return r
 
 if __name__=="__main__":
-    r=check_pnr('2529258886')
+    r=check_pnr('2303158060')
     print(r)
