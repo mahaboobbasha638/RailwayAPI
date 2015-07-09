@@ -1,7 +1,7 @@
 #Get seat availability
-import re
 import db
 import json
+from bs4 import BeautifulSoup
 from fetchpage import fetchpage
 
 #http://www.indianrail.gov.in/class_Code.html
@@ -36,7 +36,7 @@ quotaname={'GN':'GENERAL QUOTA',
            'PT':'Premium Tatkal Quota'}
 
 
-#Strips space between words and return the string
+#Strips space between string and returns it
 def strip_inline_space(s):
     new=''
     for i in s:
@@ -45,8 +45,14 @@ def strip_inline_space(s):
         new=new+i
     return new
 
+def ischaralpha(c):
+    if (c>='a' and c<='z') or (c>='A' and c<='Z'):
+        return True
+    return False
+
 def nullify(d):
     d['seats']='';d['dates']='';d['error']=True
+    return d
     
 def get_seat(train,pref,quota,doj,source,dest):
     url="http://www.indianrail.gov.in/cgi_bin/inet_accavl_cgi.cgi"
@@ -80,26 +86,33 @@ def get_seat(train,pref,quota,doj,source,dest):
             }
 
     html=fetchpage(url,values,header)
-    seat=re.findall(r"(?<=both\">)[REGRET/]*(?:RLWL|RLGN|RQWL|PQWL|LDWL|GNWL|CKWL|WL|RAC|AVAILABLE)[/0-9A-Z ]+|NOT AVAILABLE|TRAIN +DEPARTED|Charting Done",html)
-    seat=[i.strip() for i in seat]
-    dates=re.findall(r"(?<=both\">) *[0-9]+ *[0-9 -]+",html)
-    if dates==[]:
-        dates=re.findall(r"(?<=width=\"16%\">)[0-9]+ *[0-9 -]+",html)
+    soup=BeautifulSoup(html)
 
-    if seat==[]:
-        nullify(d)
-        return d
+    seats=[]
+    dates=[]
+    for i in soup.find_all('td'):
+        if i.get('class',[None])[0]== 'table_border_both':
+            if len(i.attrs.keys())==1:
+                txt=i.text
+                if(ischaralpha(txt[0])):
+                   seats.append(txt)
+                else:
+                   dates.append(strip_inline_space(txt))
+
+    if seats==[]:
+        return nullify(d)
+
     d['seats']=[]
     d['dates']=[]
     d['error']=False
-    #Sometimes the result contains seats for  two classes and sometimes only for one, so quotient adds to the seats to get the seat for required class
-    step=int(len(seat)/len(dates))
+    #Sometimes the page contains seats for two classes and sometimes only for one
+    #so 'step' contain total classes shown in the page and adding it to seat gets only the seats for queried class
+    step=int(len(seats)/len(dates))
     if step==0:
-        nullify(d)
-        return d
+        return nullify(d)
 
-    for i in range(0,len(seat),step):
-        d['seats'].append(seat[i])
+    for i in range(0,len(seats),step):
+        d['seats'].append(seats[i])
     for i in dates:
         i=strip_inline_space(i)
         d['dates'].append(i)
@@ -146,5 +159,5 @@ def seat_avl(train,pref,quota,doj,source,dest):
     return r
 
 if __name__=="__main__":
-    result=seat_avl("12296","2A","CK","08-07-2015","pnbe","sbc") #Modify date
+    result=seat_avl("12555","2A","GN","12-07-2015","gkp","ndls") #Modify date
     print(result)
