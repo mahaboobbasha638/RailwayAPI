@@ -4,5 +4,5 @@ api - A collection of modules which output JSON formatted response. For ex: LIVE
 Make sure to copy the databases generated from 'spider' in the API directory.
 
 NOTICE:
-This is an experimental and creative personal project. I am releasing the source code just as to share it with other enthusiasts.
+This is an experimental and creative personal project. I am releasing the source code just to share it with other enthusiasts.
 I have no responsibility for what is done using this code. Consult Indian Railways rules and regulations before using this code.
