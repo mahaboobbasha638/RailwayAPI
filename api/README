@@ -1,11 +1,6 @@
-Indian Railways disallows sharing of electronic databases. Run spider program to generate all the required databases and copy them here.
-
 Required databases:
 schedule-> train stoppage station code,train number,train departure time
 
 stnlist-> station name,station code,latitude,longitude
 
 train-> train name,train number
-
-
-Do it on your own responsiblity.

@@ -61,8 +61,7 @@ def get_seat(train,pref,quota,doj,source,dest):
     d['source']=source;d['dest']=dest
     doj=doj.split('-')
     if len(doj)!=3:
-        nullify(d)
-        return d
+        return nullify(d)
 
     values={"lccp_trnno":train,
             "lccp_day":doj[0],

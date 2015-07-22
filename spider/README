@@ -16,7 +16,6 @@ train-> maps train number to train name
 1) Run spider.py
 2) Run geolocator.py until all stations have their latitudes and longitudes mapped out. As Google maps allows limited request each 24 hours, you have to run it as
 many times until all stations have been mapped out.
-3) Run leftout.py *using the batch file* to fill up details of uncrawled station names.(Optional)
 4) Three databases: schedule,stnlist,train will contain everything you need.
 
 =========================================================
