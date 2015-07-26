@@ -77,18 +77,18 @@ def extract(train):
         t['no']=nxt
         t['station-code']=next(l)
         t['station-name']=next(l)
-        t['route-no']=next(l)
+        t['route-no']=int(next(l))
         t['arrival-time']=next(l)
         t['departure-time']=next(l)
         nxt=next(l)
         #Many times no halt-time is given, this condition handles that case
         if ':' not in nxt:
             t['halt-time']=0
-            t['distance']=nxt
+            t['distance']=int(nxt)
         else:
-            t['halt-time']=nxt
-            t['distance']=next(l)
-        t['day']=next(l)
+            t['halt-time']=int(nxt.split(':')[0])
+            t['distance']=int(next(l))
+        t['day']=int(next(l))
         d['route'].append(t)
         nxt=next(l)
         #print(t)
@@ -102,7 +102,7 @@ def dbcreate():
      conn=sqlite3.connect('schedule.db')
      mdb=conn.cursor()
      mdb.execute('''CREATE TABLE schedule 
-                            (station text,train text,arrival text,departure text,route text,halt text,distance text,day text)''')
+                            (station text,train text,arrival text,departure text,route integer,halt integer,distance integer,day integer)''')
     
      donn=sqlite3.connect('stncode.db')
      sdb=donn.cursor()

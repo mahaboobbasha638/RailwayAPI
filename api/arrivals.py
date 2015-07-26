@@ -91,7 +91,7 @@ def format_result_json(l,code):
     print(l)
     for i in l:
         t={}
-        m=live.callable_status(i,doj)
+        m=json.loads(live.get_status(i,doj))['route']
         val=''
         for j in m:
             n=breakstn(j['station'])
@@ -103,10 +103,10 @@ def format_result_json(l,code):
 #from live train servers.
         if val=='':
             continue
-        t['actarr']=val['act_arrival']
-        t['actdep']=val['act_departure']
-        t['schdep']=val['sch_departure']
-        t['scharr']=val['sch_arrival']
+        t['actarr']=val['actarr']
+        t['actdep']=val['actdep']
+        t['schdep']=val['schdep']
+        t['scharr']=val['scharr']
         meta=db.train_metadata(i)
         t['number']=meta['number']
         t['name']=meta['name']

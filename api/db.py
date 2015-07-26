@@ -78,18 +78,18 @@ class opendb():
     def _trn_metadata(self,val):
         cdb=self.cdb
         if val.isdigit():
-            cdb.execute("SELECT name,days FROM train WHERE number=(?)",(val,))
+            cdb.execute("SELECT * FROM train WHERE number=(?)",(val,))
             t=cdb.fetchone()
             if t==None:
                 t={}
-                t['name']="";t['days']=""
+                t['name']="";t['days']="";t['classes']=''
             t['number']=val
         else:
-            cdb.execute("SELECT number,days FROM train WHERE name=(?)",(val,))
+            cdb.execute("SELECT * FROM train WHERE name=(?)",(val,))
             t=cdb.fetchone()
             if t==None:
                 t={}
-                t['number']="";t['days']=""
+                t['number']="";t['days']="";t['classes']=''
             t['name']=val
         return t
     

@@ -2,6 +2,15 @@
 import json
 import db
 
+classname={'CC':'AC CHAIR CAR',
+           '1A':'FIRST AC',
+           '2A':'SECOND AC',
+           '3A':'THIRD AC',
+           'SL':'SLEEPER CLASS',
+           'FC':'FIRST CLASS',
+           '3E':'3rd AC ECONOMY',
+           '2S':'SECOND SEATING'}
+
 def getschedule(cdb,num):
     cdb._exec("SELECT * FROM schedule WHERE train=(?)",(num,))
     return cdb._fetchall()
@@ -32,14 +41,30 @@ def format_result_json(m,s):
         stn_md=station_metadata(val['station'])
         t={}
         t['no']=i+1
+        t['route']=int(val['route'])
         t['scharr']=val['arrival']
         t['schdep']=val['departure']
+        t['distance']=int(val['distance'])
+        t['halt']=int(val['halt'].split(':')[0])
+        t['day']=int(val['day'])
         t['lat']=stn_md['lat']
         t['lng']=stn_md['lng']
         t['state']=stn_md['state']
         t['fullname']=stn_md['fullname']
         t['code']=stn_md['code']
         d['route'].append(t)
+    d['classes']=[]
+    allclasses=m['classes'].split(',')
+    for i in classname:
+        t={}
+        t['class-code']=i
+        if m['classes']=='':
+            t['available']='-'
+        elif i in allclasses:
+            t['available']='Y'
+        else:
+            t['available']='N'
+        d['classes'].append(t)
 
     d=json.dumps(d,indent=4)
     return d
@@ -53,5 +78,5 @@ def train_route(num):
     return format_result_json(m,s)
 
 if __name__=="__main__":
-    d=train_route("12555")
+    d=train_route("12005")
     print(d)
