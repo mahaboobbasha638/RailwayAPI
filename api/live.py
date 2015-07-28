@@ -5,7 +5,7 @@ import re
 from fetchpage import fetchpage
 from bs4 import BeautifulSoup
 
-def nullify(d,error=False):
+def nullify(d,error=''):
     d['position']='-'
     d['error']=error
     d['route']=[]
@@ -41,7 +41,10 @@ def runningtime(number,doj):
         if i.attrs.get("class",[None])[0]=="runningstatus-widget-content":
             if "TRAIN IS CANCELLED" in i.text:
                 return format_result_json(nullify(d,'Train is cancelled'))
-    
+    delay_time_header=0
+    for i in soup.find_all("th"):
+        if i.text.strip()=="Delay Time":
+            delay_time_header=1
     trainmd=db.train_metadata(number)  
     days=['MON','TUE','WED','THU','FRI','SAT','SUN']
     if trainmd['days']!='':
@@ -71,11 +74,15 @@ def runningtime(number,doj):
         if station_name_format(nxt) or nxt=='END_MARKER':
             d['route'].append(t)
             continue
+        if delay_time_header:
+            nxt=next(liter)
+            d['route'].append(t)
+            continue
         t['status']=nxt
         d['route'].append(t)
         nxt=next(liter)
     if d['route']==[]:
-        return format_result_json(nullify(d,'No such train'))
+        return format_result_json(nullify(d,'Invalid Train Number'))
 
     return format_result_json(d)    
         
@@ -123,6 +130,6 @@ def get_status(number,doj):
 
 
 if __name__=="__main__":
-    print (get_status('1209555','20150725'))
+    print (get_status('12555','20150728'))
     
     

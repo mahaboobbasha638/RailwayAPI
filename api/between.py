@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import json
 
-def format_result_json(trains,days,numbers,times):
+def format_result_json(trains,days,numbers,times,destinations):
     d={}
     d['response_code']=200
     length=len(trains)
@@ -13,13 +13,14 @@ def format_result_json(trains,days,numbers,times):
     k=0
     l=0
     daycodes=['MON','TUE','WED','THU','FRI','SAT','SUN']
-    for train in trains:
+    for i,train in enumerate(trains):
         t={}
         t['no']=k+1
         t['name']=train
         t['number']=numbers[k]
         t['src_departure_time']=times[l]
         t['dest_arrival_time']=times[l+1]
+        t['destination']=destinations[i]
         l+=3
         t['days']=[]
         j=c
@@ -35,7 +36,20 @@ def format_result_json(trains,days,numbers,times):
     d=json.dumps(d,indent=4)
     return d
                 
-            
+def extract_stn_code(s):
+    s=s.strip()
+    return s.replace('Station Code ','')
+
+
+def sanitize(s):
+    s=s.strip()
+    newstr=''
+    for i in s:
+        if (s>='a' and s<='z') or (s>='A' and s<='Z'):
+            newstr+=i
+    return newstr
+
+
 def between(source,dest,date):
     url='http://www.indianrail.gov.in/cgi_bin/inet_srcdest_cgi_date.cgi'
     date=date.split('-')
@@ -62,6 +76,15 @@ def between(source,dest,date):
     for link in soup.find_all(href="#SAMETRN"):
         trains.append(link.text[1:].strip())
 
+    destinations=[]
+    for tdtag in soup.find_all("td"):
+        tagattr=tdtag.attrs.get('title','')
+        if 'Station Code' in tagattr and '.' not in tagattr:
+            t={}
+            t['code']=extract_stn_code(tdtag['title'])
+            t['name']=sanitize(tdtag.text)
+            destinations.append(t)
+
     days=re.findall("(?<=B>)Y|(?<=red>)N",html)   
     numbers=[]
     for link in soup.find_all("input"):
@@ -71,9 +94,9 @@ def between(source,dest,date):
             if num!=[]:
                 numbers.append(num[0])
     times=re.findall("(?<=TD>)[0-9:]+",html)
-    return format_result_json(trains,days,numbers,times)
+    return format_result_json(trains,days,numbers,times,destinations)
 
 
 if __name__=="__main__":
-    r=between("GKP","hbj","26-6")
+    r=between("gkp","ndls","05-08")
     print(r)

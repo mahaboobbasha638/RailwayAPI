@@ -41,19 +41,19 @@ def format_result_json(m,s):
         stn_md=station_metadata(val['station'])
         t={}
         t['no']=i+1
-        t['route']=int(val['route'])
+        t['route']=val['route']
         t['scharr']=val['arrival']
         t['schdep']=val['departure']
-        t['distance']=int(val['distance'])
-        t['halt']=int(val['halt'].split(':')[0])
-        t['day']=int(val['day'])
+        t['distance']=val['distance']
+        t['halt']=val['halt']
+        t['day']=val['day']
         t['lat']=stn_md['lat']
         t['lng']=stn_md['lng']
         t['state']=stn_md['state']
         t['fullname']=stn_md['fullname']
         t['code']=stn_md['code']
         d['route'].append(t)
-    d['classes']=[]
+    d['train']['classes']=[]
     allclasses=m['classes'].split(',')
     for i in classname:
         t={}
@@ -64,7 +64,7 @@ def format_result_json(m,s):
             t['available']='Y'
         else:
             t['available']='N'
-        d['classes'].append(t)
+        d['train']['classes'].append(t)
 
     d=json.dumps(d,indent=4)
     return d
@@ -78,5 +78,5 @@ def train_route(num):
     return format_result_json(m,s)
 
 if __name__=="__main__":
-    d=train_route("12005")
+    d=train_route("12046")
     print(d)

@@ -20,8 +20,6 @@ def fetchpage(url,values=None,header={"Referer":"http://www.indianrail.gov.in/"}
         _fcount+=1
         if _fcount>2:
             return ''
-        with open("errlog","a") as f:
-            f.write(str(e)+'\n')
         time.sleep(0.5)
         return fetchpage(url,values,header)
     
