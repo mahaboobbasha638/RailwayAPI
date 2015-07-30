@@ -1,9 +1,9 @@
 from fetchpage import fetchpage
 from bs4 import BeautifulSoup
-import re
-import json
+import db
+import json,re
 
-def format_result_json(trains,days,numbers,times,destinations):
+def format_result_json(trains,days,numbers,times,sources,destinations):
     d={}
     d['response_code']=200
     length=len(trains)
@@ -20,7 +20,8 @@ def format_result_json(trains,days,numbers,times,destinations):
         t['number']=numbers[k]
         t['src_departure_time']=times[l]
         t['dest_arrival_time']=times[l+1]
-        t['destination']=destinations[i]
+        t['from']=sources[i]
+        t['to']=destinations[i]
         l+=3
         t['days']=[]
         j=c
@@ -37,15 +38,19 @@ def format_result_json(trains,days,numbers,times,destinations):
     return d
                 
 def extract_stn_code(s):
-    s=s.strip()
-    return s.replace('Station Code ','')
-
+    s=s.replace('Station Code','').strip()    
+    code=''
+    for i in s:
+        if not  i.isalpha():
+            break
+        code=code+i
+    return code
 
 def sanitize(s):
     s=s.strip()
     newstr=''
     for i in s:
-        if (s>='a' and s<='z') or (s>='A' and s<='Z'):
+        if i.isalpha():
             newstr+=i
     return newstr
 
@@ -53,6 +58,8 @@ def sanitize(s):
 def between(source,dest,date):
     url='http://www.indianrail.gov.in/cgi_bin/inet_srcdest_cgi_date.cgi'
     date=date.split('-')
+    if len(date)==1:
+        date.append('')
     cls="ZZ"
     values={"lccp_src_stncode_dis":source,
             "lccp_src_stncode":source,
@@ -77,13 +84,21 @@ def between(source,dest,date):
         trains.append(link.text[1:].strip())
 
     destinations=[]
+    sources=[]
+    alter=0
     for tdtag in soup.find_all("td"):
         tagattr=tdtag.attrs.get('title','')
-        if 'Station Code' in tagattr and '.' not in tagattr:
+        if 'Station Code' in tagattr or 'temporary' in tagattr:
             t={}
             t['code']=extract_stn_code(tdtag['title'])
             t['name']=sanitize(tdtag.text)
-            destinations.append(t)
+            if alter==0:
+                t['name']=db.station_metadata(t['code'])['fullname']
+                sources.append(t)
+                alter=1
+            else:
+                destinations.append(t)
+                alter=0
 
     days=re.findall("(?<=B>)Y|(?<=red>)N",html)   
     numbers=[]
@@ -94,9 +109,9 @@ def between(source,dest,date):
             if num!=[]:
                 numbers.append(num[0])
     times=re.findall("(?<=TD>)[0-9:]+",html)
-    return format_result_json(trains,days,numbers,times,destinations)
+    return format_result_json(trains,days,numbers,times,sources,destinations)
 
 
 if __name__=="__main__":
-    r=between("gkp","ndls","05-08")
+    r=between("ndls","lko","12-08")
     print(r)

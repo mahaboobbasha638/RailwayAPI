@@ -69,8 +69,8 @@ class opendb():
         t=cdb.fetchone()
         if t==None:
             t={}
-            t['code']=code;t['state']=None
-            t['lat']=None;t['lng']=None;t['fullname']=None
+            t['code']=code;t['state']=''
+            t['lat']='';t['lng']='';t['fullname']=''
         else:
             t['code']=code
         return t
@@ -82,14 +82,14 @@ class opendb():
             t=cdb.fetchone()
             if t==None:
                 t={}
-                t['name']="";t['days']="";t['classes']=''
+                t['name']='';t['days']='';t['classes']=''
             t['number']=val
         else:
             cdb.execute("SELECT * FROM train WHERE name=(?)",(val,))
             t=cdb.fetchone()
             if t==None:
                 t={}
-                t['number']="";t['days']="";t['classes']=''
+                t['number']='';t['days']='';t['classes']=''
             t['name']=val
         return t
     
