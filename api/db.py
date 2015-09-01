@@ -1,6 +1,5 @@
 import sqlite3
 
-
 MAINDB="schedule.db"
 TRAINDB="train.db"
 STNDB="stnlist.db"    

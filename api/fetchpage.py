@@ -14,8 +14,7 @@ def fetchpage(url,values=None,header={"Referer":"http://www.indianrail.gov.in/"}
         req=urllib.request.Request(url,data,header)
         response=urllib.request.urlopen(req)
         html=response.read()
-        html=str(html)
-        return html
+        return str(html,'utf-8')
     except Exception as e:
         _fcount+=1
         if _fcount>2:

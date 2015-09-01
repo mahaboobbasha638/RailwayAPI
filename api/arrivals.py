@@ -24,7 +24,14 @@ def toseconds(m):
 
 
 def get_trains(code,hours):
-    seconds=3600*int(hours)
+    try:
+        hours=int(hours)
+    except ValueError:
+        hours=0
+    else:
+        if(hours>=6):
+            hours=6
+    seconds=3600*hours
     now=int(seconds_since_midnight())
     code=code.upper()
     t=[]
@@ -88,7 +95,6 @@ def format_result_json(l,code):
     d['station']=code
     doj=time.strftime("%Y%m%d")
     total=0
-    print(l)
     for i in l:
         t={}
         m=json.loads(live.get_status(i,doj))['route']
@@ -118,4 +124,4 @@ def format_result_json(l,code):
 
 
 if __name__=="__main__":
-    print(get_trains('bsb','4'))
+    print(get_trains('gkp','1'))

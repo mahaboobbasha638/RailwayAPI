@@ -1,18 +1,55 @@
 #Get PNR status
 
 from fetchpage import fetchpage
-import re
+from datetime import datetime,timedelta
+from bs4 import BeautifulSoup
 import db
 import json
 
-#Strips space between words and returns this new string
+#Strips space between words and returns a prettified string
 def strip_inline_space(s):
-    new=''
-    for i in s:
-        if i==' ':
-            continue
-        new=new+i
-    return new
+    s=s.strip()
+    new=[None]*len(s)
+    delim=',-;/'
+    state=0
+    ptr=0
+    for c in s:
+        if c==' ':
+            if state==1 or state==2:
+                state=2
+            elif state!=3:
+                state=1
+        elif c in delim:
+            state=3
+            while new[ptr-1] in ' \t' and ptr>=1:
+                ptr-=1
+        else:
+            if state==3:
+                while new[ptr-1] in ' \t' and ptr>=1:
+                    ptr-=1
+            if state==2:
+                while new[ptr-1] in ' \t' and ptr>=0:
+                    ptr-=1
+                ptr+=1
+            state=0
+
+        new[ptr]=c
+        ptr+=1
+    cleaned=''.join([new[i] for i in range(ptr)])
+    return cleaned
+
+def nullify(d):
+    d['number']='';d['doj']='';d['name']='';d['from']=''
+    d['to']='';d['upto']='';d['boarding']='';d['class']=''
+    d['chart']='';d['pnr']='';d['total']=0;d['booking_status']=[]
+    d['coach_position']=[];d['current_status']=[];d['error']=True
+    return d
+
+def p_next(it):
+    try:
+        return next(it)
+    except StopIteration:
+        return ''
 
 def get_pnr(pnr):
     url='http://www.indianrail.gov.in/cgi_bin/inet_pnstat_cgi_10521.cgi'
@@ -28,55 +65,90 @@ def get_pnr(pnr):
 
     html=fetchpage(url,values,header)
     d={}
-    num=re.findall(r"(?<=_both\">)\*?[0-9 -]+",html)
-    strings=re.findall(r"(?<=_both\">)[0-9A-Z ]+[A-Z]+",html)
-    strings=[s.strip() for s in strings]
-    psgr=re.findall(r"(?<=B>Passenger )[0-9]+",html)
-    status=re.findall(r"(?<=B>)(?!Passenger)[0-9A-Za-z/, ]+(?=</B>)",html)
+    nullify(d)
+    d['pnr']=pnr
+    soup=BeautifulSoup(html,"lxml")
+    mapper={0:'number',1:'name',2:'doj',3:'from',4:'to',5:'upto',6:'boarding',7:'class',8:'upgraded_class'}
+    count=0
     cancelled=0
-    if status!=[] and status[-1]=='TRAIN CANCELLED':
-        cancelled=1
-    status=[s.strip() for s in status]
-    booking_status=[]
-    current_status=[]
-    for i in range(0,len(status),2):
-        booking_status.append(status[i])
-        if cancelled:
-            current_status.append('TRAIN CANCELLED')
-            continue
-        current_status.append(status[i+1])
-    try:
-        d['pnr']=pnr
-        d['number']=num[0][1:]
-        d['doj']=strip_inline_space(num[1])
-        d['name']=strings[0]
-        d['from']=strings[1]
-        d['to']=strings[2]
-        d['upto']=strings[3]
-        d['boarding']=strings[4]
-        d['class']=strings[5]
-        d['chart']='N' if strings[6]=='CHART NOT PREPARED' else 'Y'
-        d['total']=len(psgr)
-        d['booking_status']=booking_status
-        d['current_status']=current_status
-        d['error']=False
-    except IndexError as e:
-        d['number']='';d['doj']='';d['name']='';d['from']=''
-        d['to']='';d['upto']='';d['boarding']='';d['class']=''
-        d['chart']='';d['pnr']='';d['total']=0;d['booking_status']=''
-        d['current_status']='';d['error']=True
-        return d
+    limit=8
+    status=[]
+        
+    for i in soup.find_all("td"):
+        if i.attrs.get("class")==["table_border_both"]:
+            txt=i.text.strip()
+            if i.attrs.get("align")=="middle":
+                d['chart']='N' if 'CHART NOT PREPARED' in txt else 'Y'
+                continue
+            if count>=limit:
+                if 'Passenger' not in txt:
+                    if status==[] and 'TRAIN CANCELLED' in txt:
+                        cancelled=1
+                        break
+                    status.append(txt)
+            else:
+                d[mapper[count]]=txt
+            count+=1
+        elif i.attrs.get("width")=="5%": # <td width="5%">Upgraded class</td>
+            limit+=1
+
+    if cancelled or count==0:
+        return nullify(d)
+    
+    if limit==9:
+        d['class']=d['upgraded_class'] # Updates current class to the upgraded class
+    total=0
+    length=len(status)
+    coachpos=0
+    if length%2==1:
+        coachpos=1
+    status=iter(status)
+    nxt=p_next(status)
+    while 1:
+        if nxt=='':
+            break
+        d['booking_status'].append(nxt)
+        nxt=p_next(status)
+        d['current_status'].append(nxt)
+        nxt=p_next(status)
+        if coachpos:
+            if nxt!='' and (nxt[0]>='0' and nxt[0]<='9'):
+                d['coach_position'].append(int(nxt))
+                nxt=p_next(status)
+            else:
+                d['coach_position'].append(0)
+        else:
+            d['coach_position'].append(0)
+        total+=1
+    d['total']=total
+    d['error']=False
     return d
 
 
 def format_result_json(p):
     d={}
     d['response_code']=200
+    d['train_start_date']={}
     d['pnr']=p['pnr']
-    train_md=db.train_metadata(p['number'])
-    d['train_num']=train_md['number']
+    #d['coach_position']=0 # For backwards comptability
+    d['doj']=strip_inline_space(p['doj'])
+    d['train_num']=p['number'][1:]
+    train_md=db.train_metadata(d['train_num'])
     d['train_name']=train_md['name']
-    d['doj']=p['doj']
+    t={}
+    if not p['error']:
+        date=[int(dt) for dt in d['doj'].split('-')]
+        traveldate=datetime(date[2],date[1],date[0])
+        with db.opendb(db.MAINDB) as sch:
+            sch._exec("SELECT * FROM schedule WHERE train=(?) AND station=(?)",(d['train_num'],p['boarding']))
+            stn_sch=sch._fetchone()
+            if stn_sch!=None:
+                runday=stn_sch['day']-1
+                start_date=traveldate-timedelta(days=runday)
+                t['year']=start_date.year
+                t['month']=start_date.month
+                t['day']=start_date.day
+    d['train_start_date']=t
     d['from_station']={}
     stn_md=db.station_metadata(p['from'])
     d['from_station']['code']=stn_md['code']
@@ -101,11 +173,13 @@ def format_result_json(p):
     
     curr_status=p['current_status']
     book_status=p['booking_status']
+    coach_position=p['coach_position']
     for i in range(p['total']):
         t={}
         t['no']=i+1
-        t['booking_status']=book_status[i]
-        t['current_status']=curr_status[i]
+        t['booking_status']=strip_inline_space(book_status[i])
+        t['current_status']=strip_inline_space(curr_status[i])
+        t['coach_position']=coach_position[i]
         d['passengers'].append(t)
 
     d=json.dumps(d,indent=4)
@@ -117,5 +191,5 @@ def check_pnr(pnr):
     return r
 
 if __name__=="__main__":
-    r=check_pnr('2303158060')
+    r=check_pnr('2637074803')
     print(r)

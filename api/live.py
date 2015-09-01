@@ -35,10 +35,20 @@ def runningtime(number,doj):
 
     weekday=datetimeob.weekday()
     html=fetchpage(url)
-    soup=BeautifulSoup(html)
-
+    soup=BeautifulSoup(html,"lxml")
+    count=0
     for i in soup.find_all("div"):
         if i.attrs.get("class",[None])[0]=="runningstatus-widget-content":
+            if count==1:
+                dot=i.text.find('.')
+                if dot!=-1:
+                    end=i.text.find('\n\n\n')
+                    #Some pages of this site has no ending tag for <div>. Handles it.
+                    if end==-1:
+                        d['position']=i.text[dot+1:]
+                    else:
+                        d['position']=i.text[dot+1:end]
+            count+=1
             if "TRAIN IS CANCELLED" in i.text:
                 return format_result_json(nullify(d,'Train is cancelled'))
     delay_time_header=0
@@ -130,6 +140,4 @@ def get_status(number,doj):
 
 
 if __name__=="__main__":
-    print (get_status('12555','20150728'))
-    
-    
+    print (get_status('12555','20150829'))

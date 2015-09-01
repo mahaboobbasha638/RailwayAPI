@@ -12,11 +12,11 @@ def codedb(db,code,name):
     if(t.fetchone()==None):
         db.execute("INSERT INTO station VALUES (?,?)",(code,name))
 
-def namedb(db,number,name,rundays,classes=''):
+def namedb(db,number,name,rundays,classes='',passenger='N'):
     t=db.execute("SELECT number FROM train WHERE number=(?)",(number,))
     if(t.fetchone()==None):
         rundays=','.join(rundays)
-        db.execute("INSERT INTO train VALUES (?,?,?,?)",(number,name,rundays,classes))
+        db.execute("INSERT INTO train VALUES (?,?,?,?,?)",(number,name,rundays,classes,passenger))
 
 
 def validate(s):
@@ -112,7 +112,7 @@ def dbcreate():
      eonn=sqlite3.connect('train.db')
      edb=eonn.cursor()
      edb.execute('''CREATE TABLE train
-                        (number text,name text,days text,classes text)''')
+                        (number text,name text,days text,classes text,passenger string)''')
 
      urls=[r'http://www.indianrail.gov.in/mail_express_trn_list.html',
           r'http://www.indianrail.gov.in/shatabdi_trn_list.html',
@@ -132,7 +132,7 @@ def dbcreate():
                  print('Extracting: ',number)
              except:
                  print('Error in: ',number)
-                 exit(11)
+                 continue
              else:
                  namedb(edb,r['train-number'],r['train-name'],r['day-code'])
                  for j in r['route']:
@@ -149,7 +149,7 @@ def dbcreate():
 
 
 if __name__=="__main__":
-    #extract('14615')
+    #print(extract('12905'))
     dbcreate()                  
 
              

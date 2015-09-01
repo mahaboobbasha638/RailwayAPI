@@ -3,4 +3,4 @@ schedule-> train stoppage station code,train number,train departure time
 
 stnlist-> station name,station code,latitude,longitude
 
-train-> train name,train number
+train-> train name,train number,classes,passenger(Y/N)

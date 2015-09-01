@@ -1,6 +1,6 @@
 
-===============DATABASE SCHEMA==========================
-schedule-> train stoppage station code,train number,train departure time
+=====================DATABASE===========================
+schedule-> train stoppage station code,train number,train departure time,route no,halt time,distance km,day of run
 
 stncode-> maps station code to station name
 
@@ -14,8 +14,7 @@ train-> maps train number to train name
 
 ===================HOW TO USE============================
 1) Run spider.py
-2) Run geolocator.py until all stations have their latitudes and longitudes mapped out. As Google maps allows limited request each 24 hours, you have to run it as
-many times until all stations have been mapped out.
+2) Run geolocator.py until all stations have their latitudes and longitudes mapped out. As Google maps allows limited request each 24 hours, you have to run it as many times until all stations have been mapped out.
 4) Three databases: schedule,stnlist,train will contain everything you need.
 
 =========================================================
